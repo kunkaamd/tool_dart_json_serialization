@@ -1,0 +1,79 @@
+<html>
+    <head></head>
+    <body>
+        <div style="display: flex;">
+            <textarea name="" id="jsondata" style="width: 1000px;height: 400px;"></textarea>
+        </div>
+        <div style="display: flex;">
+            <button id="button-run" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">GENERATOR</button>
+            <button id="button-copy" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">COPY</button>
+        </div>
+
+        <pre id="result" style="background-color: aquamarine;"></pre>
+    </body>
+    <script>
+        document.getElementById('button-run').addEventListener("click",
+            () => {
+                var result = "";
+                var data_json = JSON.parse(document.getElementById('jsondata').value);
+                var list_key  = Object.keys(data_json);
+                var list_value= Object.values(data_json);
+
+                list_key.forEach((item,index,list) => {
+                    result += "\n";
+                    let type = getType(list_value[index]);
+                    result += "@JsonKey(name: '*name*')".replace('*name*',item);
+                    result += "\n";
+                    result += "*type* *newName*;".replace("*type*",type).replace("*newName*",getNewName(item));
+                    result += "\n";
+                });
+                document.getElementById('result').innerHTML = result;
+            }
+        );
+
+        document.getElementById('button-copy').addEventListener("click",
+            () => {
+                var range = document.createRange();
+                range.selectNode(document.getElementById("result"));
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand("copy");
+                window.getSelection().removeAllRanges();
+            }
+        )
+        
+        function getNewName(name) {
+            let result = "";
+            let predix = false;
+            for(var i = 0; i < name.length; i++) {
+                if(predix === true) {
+                    result += name.charAt(i).toUpperCase();
+                    predix = false;
+                }
+                else if(name[i] === "_") {
+                    predix = true;
+                }
+                else {
+                    result += name.charAt(i);
+                }
+            }
+            return result;
+        }
+
+        function getType(value) {
+            if(typeof value === "string") return "String";
+            if(value instanceof Array) return "List";
+            if(isFloat(value)) return "Double";
+            if(isInt(value)) return "int";
+            return "dynamic";
+        }
+
+        function isInt(n){
+            return Number(n) === n && n % 1 === 0;
+        }
+
+        function isFloat(n){
+            return Number(n) === n && n % 1 !== 0;
+        }
+    </script>
+</html>
