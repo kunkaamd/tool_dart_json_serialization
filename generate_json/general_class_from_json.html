@@ -1,0 +1,117 @@
+<html>
+    <head></head>
+    <body>
+        <div style="display: flex;">
+            <textarea name="" id="jsondata" style="width: 1000px;height: 400px;"></textarea>
+        </div>
+        <div style="display: flex;">
+            <button id="button-run" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">GENERATOR CLASS FLUTTER FROM JSON</button>
+            <button id="button-copy" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">COPY</button>
+        </div>
+
+        <pre id="result" style="background-color: aquamarine;"></pre>
+    </body>
+    <script>
+        var classData = [];
+        document.getElementById('button-run').addEventListener("click",
+            () => {
+                classData = [];
+                var result = "";
+                var data_json = JSON.parse(document.getElementById('jsondata').value);
+
+                createClass("Response",data_json);
+
+                classData.forEach(item => {
+                    console.log('123');
+                    result += item;
+                });
+
+                document.getElementById('result').innerHTML = result;
+            }
+        );
+
+        document.getElementById('button-copy').addEventListener("click",
+            () => {
+                var range = document.createRange();
+                range.selectNode(document.getElementById("result"));
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand("copy");
+                window.getSelection().removeAllRanges();
+            }
+        )
+        
+        function getNewName(name,isClassName) {
+            let result = "";
+            let predix = false;
+            for(var i = 0; i < name.length; i++) {
+                if(predix === true) {
+                    result += name.charAt(i).toUpperCase();
+                    predix = false;
+                }
+                else if(isClassName && i == 0) {result += name.charAt(i).toUpperCase();}
+                else if(name[i] === "_") {
+                    predix = true;
+                }
+                else {
+                    result += name.charAt(i);
+                }
+            }
+            return result;
+        }
+
+        function getType(key,value) {
+            if(typeof value === "string") return "String";
+            if(value instanceof Array) {
+                for(var i =0;i < value.length; i++) {
+                    if(value[i]) {
+                        if(key[key.length-1] == 's') {
+                            key = key.slice(0, -1); 
+                        }
+                        return "List<*type*>".replace("*type*",getType(key,value[i]));
+                    }
+                }
+            }
+            if(isFloat(value)) return "Double";
+            if(isInt(value)) return "int";
+            if(value instanceof Object) {
+                let name = createClass(key,value);
+                return name;
+            }
+            return "dynamic";
+        }
+
+        function createClass(key,value) {
+            let result = "";
+            let name = getNewName(key,true);
+            result += "@JsonSerializable()\nclass *classname* {".replace('*classname*',name);
+            Object.keys(value).forEach((item,index,list) => {
+                result += "\n";
+                let type = getType(item,value[item]);
+                result += "  @JsonKey(name: '*name*')".replace('*name*',item);
+                result += "\n";
+                result += "  *type* *newName*;".replace("*type*",type).replace("*newName*",getNewName(item));
+                result += "\n";
+            });
+            result += "\n";
+            result += "  *classname*();".replace('*classname*',name);
+            result += "\n";
+            result += "  factory *classname*.fromJson(Map<String, dynamic> json) => _$*classname*FromJson(json);".replace('*classname*',name).replace('*classname*',name);
+            result += "\n";
+            result += "  Map<String, dynamic> toJson(instance) => _$*classname*ToJson(this);".replace('*classname*',name);
+            result += "\n";
+            result += "}";
+            result += "\n\n\n";
+            classData.push(result);
+            return name;
+        }
+
+        function isInt(n){
+            return Number(n) === n && n % 1 === 0;
+        }
+
+        function isFloat(n){
+            return Number(n) === n && n % 1 !== 0;
+        }
+    </script>
+</html>
