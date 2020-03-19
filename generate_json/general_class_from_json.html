@@ -1,15 +1,19 @@
 <html>
-    <head></head>
+    <head>
+        <link href="prism.css" rel="stylesheet" />
+    </head>
     <body>
         <div style="display: flex;">
-            <textarea name="" id="jsondata" style="width: 1000px;height: 400px;"></textarea>
+            <textarea name="" id="jsondata" style="width: 1000px;height: 200px;"></textarea>
         </div>
         <div style="display: flex;">
             <button id="button-run" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">GENERATOR CLASS FLUTTER FROM JSON</button>
-            <button id="button-copy" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">COPY</button>
+            <button id="button-copy" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">COPY ALL</button>
         </div>
+        <div id="result">
 
-        <pre id="result" style="background-color: aquamarine;"></pre>
+        </div>
+        <script src="prism.js"  data-manual></script>
     </body>
     <script>
         var classData = [];
@@ -22,25 +26,35 @@
                 createClass("Response",data_json);
 
                 classData.forEach(item => {
-                    console.log('123');
-                    result += item;
+                    result += `<pre class="line-numbers"><code class="language-dart">` + item + `</code></pre>`;
                 });
-
                 document.getElementById('result').innerHTML = result;
+                Prism.highlightAll();
             }
         );
 
         document.getElementById('button-copy').addEventListener("click",
             () => {
-                var range = document.createRange();
-                range.selectNode(document.getElementById("result"));
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-                document.execCommand("copy");
-                window.getSelection().removeAllRanges();
+                let copyText = "";
+                classData.forEach(item => {
+                    copyText += item;
+                });
+                copyToClipboard(copyText);
             }
         )
         
+        function copyToClipboard(str) {
+            const el = document.createElement('textarea');
+            el.value = str;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        };
+
         function getNewName(name,isClassName) {
             let result = "";
             let predix = false;
@@ -84,7 +98,7 @@
         function createClass(key,value) {
             let result = "";
             let name = getNewName(key,true);
-            result += "@JsonSerializable()\nclass *classname* {".replace('*classname*',name);
+            result += "@JsonSerializable()\nclass *classname* {\n".replace('*classname*',name);
             Object.keys(value).forEach((item,index,list) => {
                 result += "\n";
                 let type = getType(item,value[item]);
