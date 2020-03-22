@@ -87,6 +87,7 @@
                 }
             }
             if(isFloat(value)) return "Double";
+            if(typeof value === "boolean") return "bool";
             if(isInt(value)) return "int";
             if(value instanceof Object) {
                 let name = createClass(key,value);
