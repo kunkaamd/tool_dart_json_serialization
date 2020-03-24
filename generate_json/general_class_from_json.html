@@ -85,6 +85,7 @@
                         return "List<*type*>".replace("*type*",getType(key,value[i]));
                     }
                 }
+                return "dynamic";
             }
             if(isFloat(value)) return "Double";
             if(typeof value === "boolean") return "bool";
