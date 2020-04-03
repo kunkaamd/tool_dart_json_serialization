@@ -1,48 +1,103 @@
 <html>
-    <head></head>
+    <head>
+        <link href="prism.css" rel="stylesheet" />
+        <script>
+            function onChangeCheckboxReplace(val) {
+            document.getElementById('name-class-data').style.display = val.checked ? "flex" : "none";
+        }
+        </script>
+    </head>
     <body>
         <div style="display: flex;">
-            <textarea name="" id="jsondata" style="width: 1000px;height: 400px;"></textarea>
+            <label for="jsondata" style="flex:1">JSON: </label>
+            <textarea name="jsondata" id="jsondata" style="flex:10;width: 1000px;height: 200px;"></textarea>
+        </div>
+        <div style="display: flex;margin: 20px 0px 20px 0px;">
+            <label for="root-class-name" style="flex:1">Root Class name: </label>
+            <input type="text" id="root-class-name" name="root-class-name" style="text-transform: capitalize;flex:10;" placeholder='default: Response'><br><br>
+        </div>
+        <div style="display: flex;margin: 20px 0px 20px 0px;">
+            <label for="replace-key" style="flex:1"> Replace key 'data' or 'datas': </label><br>
+            <input type="checkbox" id="replace-key" style="flex:10" name="replace-key" value="true" onchange="onChangeCheckboxReplace(this)">
+        </div>
+        <div style="display: flex;margin: 20px 0px 20px 0px;display: none;" id="name-class-data">
+            <label for="class-name" style="flex:1">Class name: </label>
+            <input type="text" id="class-name" name="class-name" style="text-transform: capitalize;flex:10;" placeholder=''><br><br>
         </div>
         <div style="display: flex;">
-            <button id="button-run" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">GENERATOR</button>
-            <button id="button-copy" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">COPY</button>
+            <button id="button-run" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">GENERATOR CLASS FLUTTER FROM JSON</button>
+            <button id="button-copy" style="padding: 10px 10px 10px 10px;background-color: #cce5ff;border-radius: 5%;">COPY ALL</button>
         </div>
-
-        <pre id="result" style="background-color: aquamarine;"></pre>
+        <div id="result">
+        </div>
+        <script src="prism.js"  data-manual></script>
     </body>
     <script>
+        String.prototype.convertHtml = function() {
+            return this.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        }
+        var classData = [];
+        var rootclassname;
+        var isReplaceKey = false;
         document.getElementById('button-run').addEventListener("click",
             () => {
+                classData = [];
                 var result = "";
                 var data_json = JSON.parse(document.getElementById('jsondata').value);
-                var list_key  = Object.keys(data_json);
-                var list_value= Object.values(data_json);
-
-                list_key.forEach((item,index,list) => {
-                    result += "\n";
-                    let type = getType(list_value[index]);
-                    result += "@JsonKey(name: '*name*')".replace('*name*',item);
-                    result += "\n";
-                    result += "*type* *newName*;".replace("*type*",type).replace("*newName*",getNewName(item));
-                    result += "\n";
+                // Create class name
+                if(document.getElementById('root-class-name').value) {
+                    debugger;
+                    rootclassname = document.getElementById('root-class-name').value.charAt(0).toUpperCase() + document.getElementById('root-class-name').value.slice(1);
+                } else {
+                    rootclassname = "Response";
+                }
+                // Get isReplaceKey
+                isReplaceKey = document.getElementById('replace-key').checked; 
+                // Create class
+                createClass(rootclassname,data_json);
+                // Print result
+                result +=  `<pre class="line-numbers"><code class="language-dart">import 'package:json_annotation/json_annotation.dart';\n\n</code></pre>`
+                classData.forEach(item => {
+                    result += `<pre class="line-numbers"><code class="language-dart">` + item.convertHtml() + `</code></pre>`;
                 });
                 document.getElementById('result').innerHTML = result;
+                Prism.highlightAll();
             }
         );
 
         document.getElementById('button-copy').addEventListener("click",
             () => {
-                var range = document.createRange();
-                range.selectNode(document.getElementById("result"));
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-                document.execCommand("copy");
-                window.getSelection().removeAllRanges();
+                let copyText = "import 'package:json_annotation/json_annotation.dart';\n\n";
+                classData.forEach(item => {
+                    copyText += item;
+                });
+                copyToClipboard(copyText);
             }
         )
         
-        function getNewName(name) {
+        function copyToClipboard(str) {
+            const el = document.createElement('textarea');
+            el.value = str;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        };
+
+        function getNewName(name,isClassName) {
+            if(isReplaceKey && isClassName && (name == 'data' || name == 'datas' )) {
+                isReplaceKey = false;
+                var classname;
+                if(document.getElementById('class-name').value) {
+                    classname = document.getElementById('class-name').value.charAt(0).toUpperCase() + document.getElementById('class-name').value.slice(1);
+                } else {
+                    classname = name.value.charAt(0).toUpperCase() + name.value.slice(1);
+                }
+                return classname;
+            }
             let result = "";
             let predix = false;
             for(var i = 0; i < name.length; i++) {
@@ -50,6 +105,7 @@
                     result += name.charAt(i).toUpperCase();
                     predix = false;
                 }
+                else if(isClassName && i == 0) {result += name.charAt(i).toUpperCase();}
                 else if(name[i] === "_") {
                     predix = true;
                 }
@@ -60,12 +116,54 @@
             return result;
         }
 
-        function getType(value) {
+        function getType(key,value) {
             if(typeof value === "string") return "String";
-            if(value instanceof Array) return "List";
+            if(value instanceof Array) {
+                for(var i =0;i < value.length; i++) {
+                    if(value[i]) {
+                        if(key[key.length-1] == 's') {
+                            key = key.slice(0, -1); 
+                        }
+                        var type = getType(key,value[i]);
+                        debugger;
+                        return "List<*type*>".replace("*type*",type);
+                    }
+                }
+                return "dynamic";
+            }
             if(isFloat(value)) return "Double";
+            if(typeof value === "boolean") return "bool";
             if(isInt(value)) return "int";
+            if(value instanceof Object) {
+                let name = createClass(key,value);
+                return name;
+            }
             return "dynamic";
+        }
+
+        function createClass(key,value) {
+            let result = "";
+            let name = getNewName(key,true);
+            result += "@JsonSerializable()\nclass *classname* {\n".replace('*classname*',name);
+            Object.keys(value).forEach((item,index,list) => {
+                result += "\n";
+                let type = getType(item,value[item]);
+                result += "  @JsonKey(name: '*name*')".replace('*name*',item);
+                result += "\n";
+                result += "  *type* *newName*;".replace("*type*",type).replace("*newName*",getNewName(item));
+                result += "\n";
+            });
+            result += "\n";
+            result += "  *classname*();".replace('*classname*',name);
+            result += "\n";
+            result += "  factory *classname*.fromJson(Map<String, dynamic> json) => _$*classname*FromJson(json);".replace('*classname*',name).replace('*classname*',name);
+            result += "\n";
+            result += "  Map<String, dynamic> toJson(instance) => _$*classname*ToJson(this);".replace('*classname*',name);
+            result += "\n";
+            result += "}";
+            result += "\n\n";
+            classData.push(result);
+            return name;
         }
 
         function isInt(n){
