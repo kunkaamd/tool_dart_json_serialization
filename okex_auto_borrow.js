@@ -26,6 +26,6 @@ var autoborrow = setInterval(
                 
             }
             setTimeout( () => {document.querySelector(".dialog-window .close-btn").click();} ,100)
-        },1200);
-    },1500
+        },250000);
+    },300000
 );
