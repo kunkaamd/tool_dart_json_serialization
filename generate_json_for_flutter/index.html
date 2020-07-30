@@ -56,7 +56,8 @@
                 // Create class
                 createClass(rootclassname,data_json);
                 // Print result
-                result +=  `<pre class="line-numbers"><code class="language-dart">import 'package:json_annotation/json_annotation.dart';\n\n</code></pre>`
+                result +=  `<pre class="line-numbers"><code class="language-dart">import 'package:json_annotation/json_annotation.dart';\n</code></pre>`
+                result +=  `<pre class="line-numbers"><code class="language-dart">part '`.concat(getFileName(rootclassname),".g.dart';\n</code></pre>");
                 classData.forEach(item => {
                     result += `<pre class="line-numbers"><code class="language-dart">` + item.convertHtml() + `</code></pre>`;
                 });
@@ -67,7 +68,8 @@
 
         document.getElementById('button-copy').addEventListener("click",
             () => {
-                let copyText = "import 'package:json_annotation/json_annotation.dart';\n\n";
+                let copyText = "import 'package:json_annotation/json_annotation.dart';\n";
+                copyText += "part '" + getFileName(rootclassname) +".g.dart';\n\n";
                 classData.forEach(item => {
                     copyText += item;
                 });
@@ -86,6 +88,21 @@
             document.execCommand('copy');
             document.body.removeChild(el);
         };
+      
+        function getFileName(name) {
+          var result = "";
+          for(var i = 0; i < name.length; i++) {
+            if(i==0) {
+              result += name.charAt(i).toLowerCase();
+            }else if(name.charAt(i).toUpperCase() == name.charAt(i)) {
+              result += "_";
+              result += name.charAt(i).toLowerCase();
+            } else {
+              result += name.charAt(i);
+            }
+          }
+          return result;
+        }
 
         function getNewName(name,isClassName) {
             if(isReplaceKey && isClassName && (name == 'data' || name == 'datas' )) {
