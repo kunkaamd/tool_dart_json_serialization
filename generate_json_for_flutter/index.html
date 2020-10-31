@@ -175,7 +175,7 @@
             result += "\n";
             result += "  factory *classname*.fromJson(Map<String, dynamic> json) => _$*classname*FromJson(json);".replace('*classname*',name).replace('*classname*',name);
             result += "\n";
-            result += "  Map<String, dynamic> toJson(instance) => _$*classname*ToJson(this);".replace('*classname*',name);
+            result += "  Map<String, dynamic> toJson() => _$*classname*ToJson(this);".replace('*classname*',name);
             result += "\n";
             result += "}";
             result += "\n\n";
